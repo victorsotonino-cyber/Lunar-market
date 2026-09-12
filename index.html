@@ -364,8 +364,8 @@ main{padding-top:76px}
       welcome.addEventListener('touchstart', enter, {passive:true});
       // keyboard support
       document.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' ' || e.code==='Space'){ enter(); } });
-      // fallback hide after 5s so it doesn't stay stuck
-      setTimeout(function(){ if(!entered) enter(); }, 5000);
+      // fallback hide after 1.5s so it doesn't stay stuck (improved mobile UX)
+      setTimeout(function(){ if(!entered) enter(); }, 1500);
     }
 
     // IntersectionObserver reveal for .reveal
