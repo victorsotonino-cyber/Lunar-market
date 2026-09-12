@@ -257,13 +257,24 @@ main{padding-top:76px}
  max-width:650px;
 }
 
-/* MOBILE HERO ADJUST */
+/* BEST MOBILE HERO ADJUST */
 @media (max-width:480px){
- .hero h1{font-size:clamp(34px,10vw,78px)}
- .hero-actions .btn{padding:14px 18px;font-size:15px}
+  .hero h1{font-size:clamp(40px,11vw,82px); line-height:1.02;}
+  .hero-actions{gap:16px}
+  .hero-actions .btn{padding:16px 20px; font-size:16px}
+  .section{padding:40px 5%}
 }
 
 /* rest of CSS kept as before... */
+
+/* ADMIN (overrides/additions for functionality) */
+#adminOverlay{display:none}
+#adminOverlay.open{display:flex}
+.admin-sidebar{width:280px}
+.admin-main{display:flex;flex-direction:column;flex:1}
+.admin-content{padding:20px}
+.admin-nav button{width:100%;text-align:left}
+.admin-list .admin-row{margin-bottom:8px}
 
 </style>
 </head>
@@ -272,6 +283,15 @@ main{padding-top:76px}
 
 <div class="bg-orb orb1"></div>
 <div class="bg-orb orb2"></div>
+
+<!-- BIENVENIDA -->
+<div id="welcomeScreen">
+ <div class="welcome-content">
+  <div class="welcome-logo" id="welcomeLogo">L</div>
+  <h1 id="welcomeTitle">Luna Market</h1>
+  <p id="welcomeText">Haz clic en cualquier lugar para entrar</p>
+ </div>
+</div>
 
 <header>
  <a href="#inicio" class="logo" id="brandName">Luna<span>Market</span></a>
@@ -287,7 +307,7 @@ main{padding-top:76px}
 
  <div style="display:flex;align-items:center">
   <button class="menu-btn" id="menuBtn">☰</button>
-  <button class="admin-dot" id="adminBtn" title="Administración"></button>
+  <button class="admin-dot" id="adminBtn" title="Administración" aria-label="Abrir administración"></button>
  </div>
 </header>
 
@@ -311,6 +331,45 @@ main{padding-top:76px}
 
 </main>
 
+<!-- ADMIN OVERLAY -->
+<div id="adminOverlay" aria-hidden="true">
+  <div class="admin-sidebar">
+    <div class="admin-brand">Luna Market <small style="display:block;color:#555;font-size:11px;margin-top:6px">Admin</small></div>
+    <div class="admin-nav">
+      <button class="admin-tab active" data-section="categories">Categorías</button>
+      <button class="admin-tab" data-section="products">Productos</button>
+    </div>
+    <button class="admin-close" id="adminClose">Cerrar</button>
+  </div>
+  <div class="admin-main">
+    <div class="admin-top" style="padding:14px 20px;background:rgba(5,5,5,.88);border-bottom:1px solid rgba(255,255,255,.05)"><h2 style="margin:0;font-size:18px">Panel de administración</h2><span style="font-size:12px;color:#777;margin-left:8px">Gestiona categorías y productos</span></div>
+    <div class="admin-content">
+      <div class="admin-section active" id="section-categories">
+        <div class="panel">
+          <div class="panel-title"><h3 style="margin:0">Categorías</h3><span style="font-size:12px;color:#777">Agregar / eliminar</span></div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px;margin-bottom:12px">
+            <input id="catName" placeholder="Nombre de la categoría" style="flex:1;background:#080808;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:8px;color:#fff">
+            <button class="btn" id="addCatBtn">Agregar</button>
+          </div>
+          <div id="catList" class="admin-list"></div>
+        </div>
+      </div>
+
+      <div class="admin-section" id="section-products">
+        <div class="panel">
+          <div class="panel-title"><h3 style="margin:0">Productos</h3><span style="font-size:12px;color:#777">Agregar producto</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+            <input id="prodName" placeholder="Nombre del producto" style="background:#080808;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:8px;color:#fff">
+            <select id="prodCat" style="background:#080808;border:1px solid rgba(255,255,255,.06);padding:10px;border-radius:8px;color:#fff"></select>
+          </div>
+          <div style="margin-top:12px"><button class="btn" id="addProdBtn">Agregar producto</button></div>
+          <div id="prodList" class="admin-list" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reveal script (keeps section animations) -->
 <script>
 (function(){
@@ -330,6 +389,114 @@ main{padding-top:76px}
     }catch(e){console.warn(e)}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', runReveals); else runReveals();
+})();
+
+// --- Admin overlay functionality ---
+(function(){
+  // storage keys
+  var KEY_CATS = 'lm_categories_v1';
+  var KEY_PRODS = 'lm_products_v1';
+
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+
+  function load(key){ try{ return JSON.parse(localStorage.getItem(key))||[] }catch(e){return[]} }
+  function save(key,data){ localStorage.setItem(key, JSON.stringify(data)); }
+
+  // Categories
+  var cats = load(KEY_CATS);
+  var prods = load(KEY_PRODS);
+
+  var adminBtn = document.getElementById('adminBtn');
+  var adminOverlay = document.getElementById('adminOverlay');
+  var adminClose = document.getElementById('adminClose');
+  var catList = document.getElementById('catList');
+  var prodList = document.getElementById('prodList');
+  var prodCat = document.getElementById('prodCat');
+
+  function openAdmin(){ adminOverlay.classList.add('open'); adminOverlay.setAttribute('aria-hidden','false'); renderAll(); }
+  function closeAdmin(){ adminOverlay.classList.remove('open'); adminOverlay.setAttribute('aria-hidden','true'); }
+
+  if(adminBtn) adminBtn.addEventListener('click', function(){ openAdmin(); });
+  if(adminClose) adminClose.addEventListener('click', function(){ closeAdmin(); });
+
+  // Tabs
+  document.querySelectorAll('.admin-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+      var id = 'section-'+btn.getAttribute('data-section');
+      var sec = document.getElementById(id);
+      if(sec) sec.classList.add('active');
+    });
+  });
+
+  // Renderers
+  function renderCategories(){
+    catList.innerHTML='';
+    if(cats.length===0){ catList.innerHTML='<div class="empty">No hay categorías aún</div>'; return; }
+    cats.forEach(function(c){
+      var row = document.createElement('div'); row.className='admin-row';
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='10px';
+      var main = document.createElement('div'); main.style.minWidth='0';
+      var strong = document.createElement('strong'); strong.textContent = c.name; main.appendChild(strong);
+      row.appendChild(main);
+      var actions = document.createElement('div');
+      var del = document.createElement('button'); del.className='btn'; del.textContent='Eliminar'; del.style.background='#2b0d0d'; del.style.border='1px solid rgba(255,255,255,.04)'; del.onclick = function(){ removeCategory(c.id); };
+      actions.appendChild(del);
+      row.appendChild(actions);
+      catList.appendChild(row);
+    });
+  }
+
+  function renderProducts(){
+    prodList.innerHTML='';
+    if(prods.length===0){ prodList.innerHTML='<div class="empty">No hay productos aún</div>'; return; }
+    prods.forEach(function(p){
+      var row = document.createElement('div'); row.className='admin-row';
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='10px';
+      var main = document.createElement('div'); main.style.minWidth='0';
+      var strong = document.createElement('strong'); strong.textContent = p.name; var small = document.createElement('small'); small.style.display='block'; small.style.color='#777'; small.textContent = 'Categoría: '+(p.catName||'—'); main.appendChild(strong); main.appendChild(small);
+      row.appendChild(main);
+      var actions = document.createElement('div');
+      var del = document.createElement('button'); del.className='btn'; del.textContent='Eliminar'; del.style.background='#2b0d0d'; del.onclick = function(){ removeProduct(p.id); };
+      actions.appendChild(del);
+      row.appendChild(actions);
+      prodList.appendChild(row);
+    });
+  }
+
+  function populateCatSelect(){
+    prodCat.innerHTML='';
+    var opt = document.createElement('option'); opt.value=''; opt.textContent='Selecciona categoría'; prodCat.appendChild(opt);
+    cats.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.name; prodCat.appendChild(o); });
+  }
+
+  function renderAll(){ renderCategories(); renderProducts(); populateCatSelect(); }
+
+  // CRUD
+  function addCategory(name){ if(!name||!name.trim()) return; var c={id:uid(),name:name.trim()}; cats.push(c); save(KEY_CATS,cats); renderAll(); }
+  function removeCategory(id){ cats = cats.filter(function(x){ return x.id!==id }); save(KEY_CATS,cats); // also remove products in that cat
+    prods = prods.filter(function(p){ return p.cat !== id }); save(KEY_PRODS,prods); renderAll(); }
+
+  function addProduct(name,catId){ if(!name||!name.trim()) return; var cat = cats.find(c=>c.id===catId); var p={id:uid(),name:name.trim(),cat:catId,catName:cat?cat.name:''}; prods.push(p); save(KEY_PRODS,prods); renderAll(); }
+  function removeProduct(id){ prods = prods.filter(function(p){ return p.id!==id }); save(KEY_PRODS,prods); renderAll(); }
+
+  // Bind UI
+  var addCatBtn = document.getElementById('addCatBtn');
+  var catNameInput = document.getElementById('catName');
+  var addProdBtn = document.getElementById('addProdBtn');
+  var prodNameInput = document.getElementById('prodName');
+
+  if(addCatBtn){ addCatBtn.addEventListener('click', function(){ addCategory(catNameInput.value); catNameInput.value=''; }); }
+  if(addProdBtn){ addProdBtn.addEventListener('click', function(){ addProduct(prodNameInput.value, prodCat.value); prodNameInput.value=''; prodCat.value=''; }); }
+
+  // Initialize
+  renderAll();
+
+  // Accessibility: close on Esc
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && adminOverlay.classList.contains('open')) closeAdmin(); });
+
 })();
 </script>
 
