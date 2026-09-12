@@ -343,28 +343,26 @@ main{padding-top:76px}
 <!-- Fix script: ensure welcome screen works, animations trigger, and remove victorsotonino links -->
 <script>
 (function(){
-  function safeQuery(selector){ try{ return document.querySelectorAll(selector);}catch(e){return [];} }
-  document.addEventListener('DOMContentLoaded', function(){
+  function init(){
     var welcome = document.getElementById('welcomeScreen');
     if(welcome){
-      // allow entering on click/touch/keyboard; prevent double-blocks
       var entered = false;
       var enter = function(){
         if(entered) return; entered = true;
-        welcome.classList.add('hide');
-        // ensure it's removed from DOM after animation
-        setTimeout(function(){
-          if(welcome && welcome.parentNode) welcome.parentNode.removeChild(welcome);
-        },900);
-        // restore scroll
+        // add hide class for fade, but immediately stop pointer events so clicks pass through
+        try{ welcome.classList.add('hide'); welcome.style.pointerEvents = 'none'; }catch(e){}
+        // remove from DOM shortly after to free interaction
+        setTimeout(function(){ if(welcome && welcome.parentNode) welcome.parentNode.removeChild(welcome); }, 500);
         try{ document.documentElement.style.overflow=''; document.body.style.overflow='auto'; }catch(e){}
       };
-      // Try to make interactions responsive on mobile
+
+      // Listeners (include touchend for devices that need it)
       welcome.addEventListener('click', enter, {passive:true});
       welcome.addEventListener('touchstart', enter, {passive:true});
-      // keyboard support
+      welcome.addEventListener('touchend', enter, {passive:true});
       document.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.key===' ' || e.code==='Space'){ enter(); } });
-      // fallback hide after 1.5s so it doesn't stay stuck (improved mobile UX)
+
+      // fallback hide after 1.5s
       setTimeout(function(){ if(!entered) enter(); }, 1500);
     }
 
@@ -379,7 +377,6 @@ main{padding-top:76px}
         },{threshold:0.12});
         reveals.forEach(function(r){ io.observe(r); });
       } else {
-        // fallback: just show them
         reveals.forEach(function(r){ r.classList.add('visible'); });
       }
     }catch(e){}
@@ -391,11 +388,8 @@ main{padding-top:76px}
         try{
           var href = a.getAttribute('href') || '';
           if(/victorsotonino/i.test(href) || /victorsotonino/i.test(a.textContent)){
-            // remove the href and optionally clear text
             a.removeAttribute('href');
-            // if the visible text is the username, clear it
             if(/^\s*victorsotonino/i.test(a.textContent.trim())) a.textContent = '';
-            // make it look non-interactive
             a.style.pointerEvents = 'none';
             a.style.cursor = 'default';
           }
@@ -412,8 +406,13 @@ main{padding-top:76px}
         }
       });
     }catch(e){}
+  }
 
-  });
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>
 
