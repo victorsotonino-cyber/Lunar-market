@@ -36,6 +36,11 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 .small{font-size:13px;color:var(--muted)}
 .admin-list .row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;margin-bottom:8px;background:#0b0b0b}
 .admin-actions button{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+
+/* Improvements for touchability and visibility */
+.admin-dot{width:28px;height:28px;border-radius:6px;background:#ff4d4d;border:2px solid rgba(255,255,255,.08);box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:9999}
+.admin-fab{display:none;position:fixed;right:18px;bottom:18px;z-index:100000;background:#ff4d4d;color:#fff;padding:12px 14px;border-radius:999px;border:0;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.45);cursor:pointer}
+@media (max-width:700px){.admin-dot{display:none}.admin-fab{display:block}}
 </style>
 </head>
 <body>
@@ -68,7 +73,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
   Hecho con ♥ — Interfaz limpia y admin local.
 </footer>
 </div>
-<!-- ADMIN OVERLAY (same UI as earlier, but links to remote assets) -->
+<!-- ADMIN OVERLAY -->
 <div id="adminOverlay" aria-hidden="true">
   <div class="admin-panel" role="dialog" aria-modal="true">
     <div class="admin-sidebar">
@@ -101,6 +106,9 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
     </div>
   </div>
 </div>
+<!-- Floating admin button for mobile -->
+<button id="adminFab" class="admin-fab" aria-label="Abrir administración">Admin</button>
+
 <script>
 (function(){
   // Simple product render using localStorage keys
@@ -155,8 +163,8 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
 
   function openAdmin(){adminOverlay.classList.add('open');adminOverlay.setAttribute('aria-hidden','false');renderAdmin();}
   function closeAdmin(){adminOverlay.classList.remove('open');adminOverlay.setAttribute('aria-hidden','true');}
-  adminBtn.addEventListener('click',openAdmin);
-  adminClose.addEventListener('click',closeAdmin);
+  if(adminBtn) adminBtn.addEventListener('click',openAdmin);
+  if(adminClose) adminClose.addEventListener('click',closeAdmin);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAdmin()});
 
   // Tabs
@@ -189,6 +197,22 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
   // init
   renderProducts();
   renderAdmin();
+})();
+
+// --- FAB + auto-open support ---
+(function(){
+  var fab = document.getElementById('adminFab');
+  var adminBtn = document.getElementById('adminBtn');
+  var adminOverlay = document.getElementById('adminOverlay');
+  function openOverlay(){ if(adminBtn && typeof adminBtn.click === 'function') adminBtn.click(); else if(adminOverlay){ adminOverlay.classList.add('open'); adminOverlay.setAttribute('aria-hidden','false'); } }
+  if(fab){ fab.addEventListener('click', openOverlay); }
+
+  // Auto open if URL has ?admin=1 or #admin
+  try{
+    if(location.search.indexOf('admin=1') !== -1 || location.hash === '#admin'){
+      setTimeout(openOverlay, 200);
+    }
+  }catch(e){/* ignore */}
 })();
 </script>
 </body>
