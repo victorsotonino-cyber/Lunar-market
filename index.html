@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">Mi Tienda</div>
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">Panel</button>
+        <button class="nav-btn" data-view="categories">Categorías</button>
+        <button class="nav-btn" data-view="products">Productos</button>
+        <button class="nav-btn" data-view="settings">Ajustes</button>
+      </nav>
+      <div class="sidebar-footer">© 2026</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title" id="viewTitle">Panel</div>
+        <div class="top-actions">
+          <input id="search" placeholder="Buscar..." />
+          <div class="avatar">VS</div>
+        </div>
+      </header>
+
+      <section class="content">
+        <!-- DASHBOARD -->
+        <div class="view" id="dashboardView">
+          <div class="grid">
+            <div class="card big">
+              <h3>Bienvenido</h3>
+              <p>Usa el menú para añadir categorías y productos. Los productos requieren elegir una categoría — así no se mezclan todo en uno.</p>
+            </div>
+            <div class="card">
+              <h4>Total Categorías</h4>
+              <div id="countCategories">0</div>
+            </div>
+            <div class="card">
+              <h4>Total Productos</h4>
+              <div id="countProducts">0</div>
+            </div>
+            <div class="card">
+              <h4>Últimos productos</h4>
+              <ul id="latestProducts" class="list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORIES -->
+        <div class="view hidden" id="categoriesView">
+          <div class="panel">
+            <h2>Añadir categoría</h2>
+            <form id="categoryForm">
+              <input type="text" id="catName" placeholder="Nombre de la categoría" required />
+              <textarea id="catDesc" placeholder="Descripción (opcional)"></textarea>
+              <button type="submit" class="btn primary">Crear categoría</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <h2>Categorías existentes</h2>
+            <ul id="categoriesList" class="cards-grid"></ul>
+          </div>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div class="view hidden" id="productsView">
+          <div class="panel">
+            <h2>Añadir producto</h2>
+            <form id="productForm">
+              <input type="text" id="prodName" placeholder="Nombre del producto" required />
+              <select id="prodCategory" required>
+                <option value="">Selecciona una categoría</option>
+              </select>
+              <input type="number" id="prodPrice" placeholder="Precio (USD)" min="0" step="0.01" required />
+              <textarea id="prodDesc" placeholder="Descripción"></textarea>
+              <div class="file-row">
+                <input type="file" id="prodImage" accept="image/*" />
+                <img id="imgPreview" class="img-preview hidden" alt="preview" />
+              </div>
+              <button type="submit" class="btn primary">Crear producto</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <h2>Productos</h2>
+            <ul id="productsList" class="cards-grid"></ul>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="view hidden" id="settingsView">
+          <div class="panel">
+            <h2>Ajustes</h2>
+            <p>Prototipo: los datos se guardan en tu navegador (localStorage). Para producción necesitas backend y autenticación.</p>
+            <button id="resetBtn" class="btn warn">Borrar datos (reset)</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
